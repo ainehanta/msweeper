@@ -4,7 +4,7 @@
 #define BOARD_BOMB   -1
 #define BOARD_NONE   0
 
-#define BOARD_CLOSE  -1
+#define BOARD_CLOSE  -2
 #define BOARD_OPEN   0
 #define BOARD_1      1
 #define BOARD_2      2

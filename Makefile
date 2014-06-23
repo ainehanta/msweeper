@@ -1,5 +1,5 @@
 TARGET = msweeper
-SRCS = main.c msweeper.c
+SRCS = main.c msweeper.c ui.c
 
 OBJS = $(SRCS:.c=.o)
 CC = gcc
@@ -17,4 +17,5 @@ clean :
 	rm -f $(OBJS) $(TARGET)
 
 msweeper.c : msweeper.h
-main.c : msweeper.c debug.h
+ui.c : ui.h
+main.c : msweeper.c ui.c

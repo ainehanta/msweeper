@@ -23,6 +23,7 @@ MsContext* msInitContext(int w, int h)
   for(i=0;i<h;i++)
   {
     tmp[i] = malloc(sizeof(char)*w);
+    memset(tmp[i],BOARD_NONE,sizeof(char)*w);
   }
   context->board = tmp;
 
@@ -30,6 +31,7 @@ MsContext* msInitContext(int w, int h)
   for(i=0;i<h;i++)
   {
     tmp[i] = malloc(sizeof(char)*w);
+    memset(tmp[i],BOARD_CLOSE,sizeof(char)*w);
   }
   context->disp_board = tmp;
 
@@ -69,21 +71,6 @@ MsContext* msDestroyContext(MsContext* context)
 //y:最初に入力されたy座標
 void msCreateBoard(MsContext *context,int num,int x,int y)
 {
-  char** tmp;
-  int i;
-
-  tmp = context->disp_board;
-  for(i=0;i<context->h;i++)
-  {
-    memset(tmp[i],BOARD_CLOSE,sizeof(char)*context->w);
-  }
-
-  tmp = context->board;
-  for(i=0;i<context->h;i++)
-  {
-    memset(tmp[i],BOARD_NONE,sizeof(char)*context->w);
-  }
-
   msCreateBomb(context,num);
   msShuffleBoard(context);
   msExchangeValue(context,x,y);
@@ -150,9 +137,16 @@ void msExchangeValue(MsContext *context,int x,int y)
   rx = rand()%context->w;
   ry = rand()%context->h;
 
-  swap = tmp[ry][rx];
-  tmp[ry][rx] = tmp[y][x];
-  tmp[y][x] = swap;
+  if(tmp[ry][rx]==BOARD_BOMB)
+  {
+    msExchangeValue(context,x,y);
+  }
+  else
+  {
+    swap = tmp[ry][rx];
+    tmp[ry][rx] = tmp[y][x];
+    tmp[y][x] = swap;
+  }
 }
 
 //管理用ボード上各座標のボム数を計算して
@@ -169,6 +163,7 @@ void msCalcBombNum(MsContext *context)
     for(x=0;x<context->w;x++)
     {
       bomb = 0;
+      //各座標のボム数を足し合わせる
       if(board[y][x] != BOARD_BOMB)
       {
         if(y-1>=0)
@@ -207,9 +202,11 @@ int msOpenBoard(MsContext *context,int x,int y)
   disp_board = context->disp_board;
 
   if(board[y][x] == BOARD_BOMB)
+  {
     return GAME_OVER;
+  }
 
-  if(board[y][x]==BOARD_NONE)
+  if(board[y][x] == BOARD_NONE)
     disp_board[y][x] = BOARD_OPEN;
   else
     disp_board[y][x] = board[y][x];
@@ -326,6 +323,8 @@ int msIsGameClear(MsContext *context)
 
   num = context->num;
 
+  //トータルのボム数から正しいフラグを引いて
+  //ゼロだったらクリア
   for(y=0;y<context->h;y++)
   {
     for(x=0;x<context->w;x++)
