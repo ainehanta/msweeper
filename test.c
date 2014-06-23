@@ -3,13 +3,11 @@
 #include <time.h>
 
 #include "msweeper.h"
-#include "display.h"
 
 int main(void)
 {
   MsContext *context;
   srand(1);
-  //srand((unsigned)time(NULL));
 
   context = msInitContext(8,8);
 

@@ -87,9 +87,6 @@ void msCreateBoard(MsContext *context,int num,int x,int y)
   msCreateBomb(context,num);
   msShuffleBoard(context);
   msExchangeValue(context,x,y);
-
-  //D
-  msPrintContext(context);
   msCalcBombNum(context);
 }
 
@@ -195,20 +192,96 @@ void msCalcBombNum(MsContext *context)
   }
 }
 
-//TODO
 //指定座標のますを開く
 //管理用ボードの値を見てボム以外なら表示用ボードにコピー
 //ボムの場合は戻り値でゲームオーバー通知
 //x,y:座標
+//戻り値:GAME_SAFE(ゲーム続行)
+//       GAME_OVER(ゲームオーバー)
 int msOpenBoard(MsContext *context,int x,int y)
 {
+  char** board;
+  char** disp_board;
+
+  board = context->board;
+  disp_board = context->disp_board;
+
+  if(board[y][x] == BOARD_BOMB)
+    return GAME_OVER;
+
+  if(board[y][x]==BOARD_NONE)
+    disp_board[y][x] = BOARD_OPEN;
+  else
+    disp_board[y][x] = board[y][x];
+
+  return GAME_SAFE;
 }
 
-//TODO
 //指定座標のマスにフラグを立てる
 //x,y:座標
-void msSetFlag(MsContext *context,int x,int y)
+//戻り値:SUCCESS
+//       FAIL
+int msSetFlag(MsContext *context,int x,int y)
 {
+  char** disp_board;
+  disp_board = context->disp_board;
+
+  if(msIsSetFlag(context,x,y)==1 ||
+     msIsOpen(context,x,y)==1)
+    return FAIL;
+
+  disp_board[y][x] = BOARD_FLAG;
+
+  return SUCCESS;
+}
+
+//指定座標のますのフラグを下げる
+//x,y:座標
+//戻り値:SUCCESS
+//       FAIL
+int msUnSetFlag(MsContext *context,int x,int y)
+{
+  char** disp_board;
+  disp_board = context->disp_board;
+
+  if(msIsSetFlag(context,x,y)==0)
+    return FAIL;
+
+  disp_board[y][x] = BOARD_CLOSE;
+
+  return SUCCESS;
+}
+
+//指定座標のマスが開かれているか
+//x,y:座標
+//戻り値:1(開いている)
+//       0(閉じている)
+int msIsOpen(MsContext *context,int x,int y)
+{
+  char** disp_board;
+
+  disp_board = context->disp_board;
+
+  if(disp_board[y][x]==BOARD_CLOSE)
+    return 0;
+
+  return 1;
+}
+
+//指定座標のマスにフラグがセットされているか
+//x,y:座標
+//戻り値:1(セット)
+//       0(セットされていない)
+int msIsSetFlag(MsContext *context,int x,int y)
+{
+  char** disp_board;
+
+  disp_board = context->disp_board;
+
+  if(disp_board[y][x]==BOARD_FLAG)
+    return 1;
+
+  return 0;
 }
 
 //管理用ボードの指定された座標がボムかどうか
@@ -223,22 +296,49 @@ int msIsBomb(MsContext *context,int x,int y)
     return 0;
 }
 
-//TODO
 //指定座標が操作可能な範囲か判定する
 //戻り値: 1(可能)
 //        0(不可能)
 int msIsCorrectPosition(MsContext *context,int x,int y)
 {
+  if(x<context->w && y<context->h &&
+     x>=0 && y>=0)
+    return 1;
+
+  return 0;
 }
 
-//TODO
 //クリアしているか判定する
 //クリアとは、すべてのボムにフラグが立っていること
 //ゲームオーバーはmsOpenBoardで判断する
 //戻り値: GAME_CLEAR(クリア)
 //        GAME_SAFE(ゲーム中)
-int msIsClear(MsContext *context)
+int msIsGameClear(MsContext *context)
 {
+  char** board;
+  char** disp_board;
+
+  int x,y;
+  int num;
+
+  board = context->board;
+  disp_board = context->disp_board;
+
+  num = context->num;
+
+  for(y=0;y<context->h;y++)
+  {
+    for(x=0;x<context->w;x++)
+    {
+      if(disp_board[y][x]==BOARD_FLAG&&board[y][x]==BOARD_BOMB)
+        num--;
+    }
+  }
+
+  if(num)
+    return GAME_SAFE;
+
+  return GAME_CLEAR;
 }
 
 //デバッグ用
@@ -280,13 +380,13 @@ void msPrintContext(MsContext *context)
     printf("%2d : ",y);
     for(x=0;x<context->w;x++)
     {
-      if(tmp[y][x]==BOARD_BOMB)
-      {
-        printf("M");
-      }
       if(tmp[y][x]==BOARD_FLAG)
       {
         printf("F");
+      }
+      else if(tmp[y][x]==BOARD_CLOSE)
+      {
+        printf("X");
       }
       else
       {

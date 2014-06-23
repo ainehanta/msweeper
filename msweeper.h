@@ -4,7 +4,8 @@
 #define BOARD_BOMB   -1
 #define BOARD_NONE   0
 
-#define BOARD_CLOSE  0
+#define BOARD_CLOSE  -1
+#define BOARD_OPEN   0
 #define BOARD_1      1
 #define BOARD_2      2
 #define BOARD_3      3
@@ -16,12 +17,13 @@
 
 #define BOARD_FLAG   9
 
-//コンテキスト
-//disp_board:表示用ボード
-//board:管理用ボード
-//h:ボード幅
-//w:ボード高さ
-//num:ボム数
+#define GAME_CLEAR  1
+#define GAME_SAFE   0
+#define GAME_OVER   -1
+
+#define SUCCESS     0
+#define FAIL        -1
+
 struct _MsContext
 {
   char** disp_board;
@@ -66,17 +68,37 @@ void msExchangeValue(MsContext *context,int x,int y);
 //管理用ボードの各要素に代入
 void msCalcBombNum(MsContext *context);
 
-//TODO
 //指定座標のますを開く
 //管理用ボードの値を見てボム以外なら表示用ボードにコピー
 //ボムの場合は戻り値でゲームオーバー通知
 //x,y:座標
+//戻り値:GAME_SAFE(ゲーム続行)
+//       GAME_OVER(ゲームオーバー)
 int msOpenBoard(MsContext *context,int x,int y);
 
-//TODO
 //指定座標のマスにフラグを立てる
 //x,y:座標
-void msSetFlag(MsContext *context,int x,int y);
+//戻り値:SUCCESS
+//       FAIL
+int msSetFlag(MsContext *context,int x,int y);
+
+//指定座標のますのフラグを下げる
+//x,y:座標
+//戻り値:SUCCESS
+//       FAIL
+int msUnSetFlag(MsContext *context,int x,int y);
+
+//指定座標のマスが開かれているか
+//x,y:座標
+//戻り値:1(開いている)
+//       0(閉じている)
+int msIsOpen(MsContext *context,int x,int y);
+
+//指定座標のマスにフラグがセットされているか
+//x,y:座標
+//戻り値:1(セット)
+//       0(セットされていない)
+int msIsSetFlag(MsContext *context,int x,int y);
 
 //管理用ボードの指定された座標がボムかどうか
 //x,y:座標
@@ -84,22 +106,20 @@ void msSetFlag(MsContext *context,int x,int y);
 //       0(それ以外)
 int msIsBomb(MsContext *context,int x,int y);
 
-//TODO
 //指定座標が操作可能な範囲か判定する
 //戻り値: 1(可能)
 //        0(不可能)
 int msIsCorrectPosition(MsContext *context,int x,int y);
 
-//TODO
 //クリアしているか判定する
 //クリアとは、すべてのボムにフラグが立っていること
 //ゲームオーバーはmsOpenBoardで判断する
 //戻り値: GAME_CLEAR(クリア)
 //        GAME_SAFE(ゲーム中)
-int msIsClear(MsContext *context);
+int msIsGameClear(MsContext *context);
 
 //デバッグ用
-//コンテキスト内容を表示
+//デバッグ用のなので非分割
 void msPrintContext(MsContext *context);
 
 #endif
